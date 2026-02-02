@@ -1,7 +1,160 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Downpatch.com – getting started with speedrunning</PageTitle>
 
-<h1>Hello, world!</h1>
+<HeadContent>
+    <meta name="description"
+          content="Downpatch.com is a central place for getting started with speedrunning. Find the correct timing method, LiveSplit setup, downpatching guides, and links to community resources." />
+    <link rel="canonical" href="https://downpatch.com/" />
+    <meta property="og:title" content="Downpatch.com – getting started with speedrunning" />
+    <meta property="og:description"
+          content="A central place to normalise the 'getting started' part of speedrunning: timing methods, LiveSplit setup, downpatching, and links to guides." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://downpatch.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Downpatch.com – getting started with speedrunning" />
+    <meta name="twitter:description"
+          content="A central place for speedrun setup basics: timers, downpatching, and guides." />
+</HeadContent>
 
-Welcome to your new app.
+<section class="section" aria-labelledby="home-intro">
+    <p class="section-kicker">Start here</p>
+    <h2 id="home-intro" class="section-title">Getting started with speedrunning</h2>
+
+    <p class="section-lead">
+        A source of truth for the setup side of speedrunning — explained game-by-game.
+    </p>
+
+    <ul class="callouts">
+        <li><strong>Timing:</strong> what method the game uses and what counts</li>
+        <li><strong>LiveSplit:</strong> the setup you actually need (and what you can ignore)</li>
+        <li><strong>Version:</strong> whether you need to downpatch, and how</li>
+        <li><strong>Where to start:</strong> where to buy the game and where the community guides live</li>
+    </ul>
+
+    <nav aria-label="Get started">
+        <ul>
+            <li><a href="/guide"><strong>Start here</strong></a> – the recommended path</li>
+            <li><a href="/guide/livesplit">LiveSplit setup</a></li>
+            <li><a href="/guide/timing">Timing methods</a></li>
+            <li><a href="/guide/downpatch">Downpatching</a></li>
+        </ul>
+    </nav>
+
+    <p class="hint">
+        Goal: make the first step predictable, then point you to the best community resources for the game.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="why">
+    <p class="section-kicker">Why</p>
+    <h2 id="why" class="section-title">Why this exists</h2>
+
+    <p class="section-lead">
+        The hardest part of starting is usually not the run — it’s finding reliable setup info.
+    </p>
+
+    <p>
+        A lot of “getting started” knowledge lives in scattered places: Discord pins, docs, old posts,
+        speedrun.com pages, videos, and guides that assume you already know the terminology.
+    </p>
+
+    <p class="hint">
+        This site exists to collect the essentials in one place, written clearly and kept up to date.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="for">
+    <p class="section-kicker">What you’ll find</p>
+    <h2 id="for" class="section-title">What this site is for</h2>
+
+    <ul class="callouts">
+        <li><strong>Timing reference</strong> for each game (RTA vs IGT, autosplitters, common gotchas)</li>
+        <li><strong>LiveSplit guidance</strong> with sensible defaults and minimal jargon</li>
+        <li><strong>Downpatch steps</strong> when a category requires an older version</li>
+        <li><strong>Purchase/version notes</strong> (where to buy, which storefront/version matters)</li>
+        <li><strong>Links outward</strong> to the best community guides rather than duplicating them</li>
+    </ul>
+
+    <p class="hint">
+        Think of it as a stable “setup index” you can link to.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="not">
+    <p class="section-kicker">Boundaries</p>
+    <h2 id="not" class="section-title">What this site is not</h2>
+
+    <ul class="callouts">
+        <li>Not a leaderboard</li>
+        <li>Not a replacement for game communities</li>
+        <li>Not a rules authority</li>
+    </ul>
+
+    <p class="hint">
+        Everything here should point you towards the community, not away from it.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="use">
+    <p class="section-kicker">How it works</p>
+    <h2 id="use" class="section-title">How to use it</h2>
+
+    <p class="section-lead">If you’re new, this is the usual path:</p>
+
+    <ol class="callouts">
+        <li>Pick the game you want to run</li>
+        <li>Check timing and rules basics</li>
+        <li>Set up LiveSplit</li>
+        <li>Follow any version or downpatch steps</li>
+        <li>Move on to the game’s community guides</li>
+    </ol>
+
+    <nav aria-label="Browse">
+        <ul>
+            <li><a href="/guide"><strong>Browse guides</strong></a></li>
+        </ul>
+    </nav>
+
+    <p class="hint">
+        If you already run a game, these pages should still be useful as a reference you can share.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="status">
+    <p class="section-kicker">Status</p>
+    <h2 id="status" class="section-title">Work in progress</h2>
+
+    <p class="section-lead">
+        Pages will evolve as communities update tools, versions change, and better explanations emerge.
+    </p>
+
+    <p class="hint">
+        If something is unclear, it probably needs rewriting. That’s valuable feedback.
+    </p>
+</section>
+
+<section class="section" aria-labelledby="contribute">
+    <p class="section-kicker">Help improve it</p>
+    <h2 id="contribute" class="section-title">Contributing</h2>
+
+    <p class="section-lead">
+        Guides are written in Markdown and reviewed in public. Small fixes are welcome.
+    </p>
+
+    <ul class="callouts">
+        <li>
+            <strong>Website (Blazor Server):</strong> layout, accessibility, navigation, hosting<br />
+            <a href="https://github.com/downpatch/website">github.com/downpatch/website</a>
+        </li>
+        <li>
+            <strong>Content (Markdown guides):</strong> the actual game pages and setup guidance<br />
+            <a href="https://github.com/downpatch/content">github.com/downpatch/content</a>
+        </li>
+    </ul>
+
+    <p class="hint">
+        If you can edit a README on GitHub, you can contribute here.
+    </p>
+</section>

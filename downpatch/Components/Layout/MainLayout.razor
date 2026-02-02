@@ -1,17 +1,29 @@
-﻿@inherits LayoutComponentBase
+﻿@* If you also want the footer on every page, use this version instead *@
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<a class="skip" href="#main">Skip to main content</a>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<main id="main" tabindex="-1">
+    <header class="page-header">
+        <h1>downpatch.com</h1>
+        <p>
+            A source of truth for getting started with speedrunning.
+            Clear, game-by-game guidance on timing methods, LiveSplit setup,
+            whether you need to downpatch, where to buy the game,
+            and links to trusted community resources.
+        </p>
+        <p class="hint">
+            The aim is to make the first step predictable, then point you towards
+            the best guides and communities for the game you want to run.
+        </p>
+    </header>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    @Body
+
+    <footer>
+        <p>
+            Downpatch is a community-maintained reference site.
+            It is not affiliated with Valve, speedrun.com, or any game publisher.
+        </p>
+    </footer>
+</main>
