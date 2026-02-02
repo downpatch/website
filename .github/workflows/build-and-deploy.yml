@@ -50,9 +50,10 @@ jobs:
         run: |
           set -euo pipefail
           RELEASE="${{ github.sha }}"
-          ssh -p "${{ secrets.SSH_PORT }}" -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -lc " \
-            set -euo pipefail; \
-            ln -sfn /var/www/downpatch/releases/${RELEASE} /var/www/downpatch/current; \
-            sudo /bin/systemctl restart downpatch.service; \
-            sudo /bin/systemctl status downpatch.service --no-pager \
-          "
+          ssh -p "${{ secrets.SSH_PORT }}" -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << EOF
+          set -euo pipefail
+          ln -sfn "/var/www/downpatch/releases/${RELEASE}" /var/www/downpatch/current
+
+          sudo -n /bin/systemctl restart downpatch.service
+          sudo -n /bin/systemctl status downpatch.service --no-pager
+          EOF
