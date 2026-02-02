@@ -1,0 +1,277 @@
+﻿@page "/guide"
+@page "/guide/{**slug}"
+@using Microsoft.AspNetCore.Components.Web
+@using downpatch.Data
+@using downpatch.Services
+@inject MarkdownStore Store
+@inject MarkdownRenderer Renderer
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject SiteBranding Brand
+
+<PageTitle>@_pageTitleFull</PageTitle>
+
+<HeadContent>
+    @* Basic *@
+    <meta name="application-name" content="@Brand.SiteName" />
+    @if (!string.IsNullOrWhiteSpace(Brand.ThemeColor))
+    {
+        <meta name="theme-color" content="@Brand.ThemeColor" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_canonical))
+    {
+        <link rel="canonical" href="@_canonical" />
+        <meta property="og:url" content="@_canonical" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_description))
+    {
+        <meta name="description" content="@_description" />
+    }
+
+    @* Social cards *@
+    <meta property="og:site_name" content="@Brand.SiteName" />
+    <meta property="og:title" content="@_pageTitleFull" />
+    <meta property="og:type" content="article" />
+
+    @if (!string.IsNullOrWhiteSpace(_description))
+    {
+        <meta property="og:description" content="@_description" />
+    }
+
+    @{
+        var ogImage = !string.IsNullOrWhiteSpace(_ogImage)
+        ? _ogImage
+        : Brand.DefaultOgImage;
+    }
+    @if (!string.IsNullOrWhiteSpace(ogImage))
+    {
+        <meta property="og:image" content="@ToAbsolute(ogImage)" />
+        <meta name="twitter:card" content="summary_large_image" />
+    }
+    else
+    {
+        <meta name="twitter:card" content="summary" />
+    }
+
+    <meta name="twitter:title" content="@_pageTitleFull" />
+    @if (!string.IsNullOrWhiteSpace(_description))
+    {
+        <meta name="twitter:description" content="@_description" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Brand.TwitterHandle))
+    {
+        <meta name="twitter:site" content="@Brand.TwitterHandle" />
+    }
+
+    @if (_noIndex)
+    {
+        <meta name="robots" content="noindex,nofollow" />
+    }
+
+    @* JSON-LD *@
+    <script type="application/ld+json">@_jsonLd</script>
+</HeadContent>
+
+
+@if (_notFound)
+{
+    <h1>Not found</h1>
+    <p>That page doesn’t exist.</p>
+}
+else if (_html is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="doc-layout">
+        @if (_nav is not null)
+        {
+            <aside class="doc-sidebar" aria-label="Section contents">
+                <div class="sidebar-card">
+                    <h2 class="sidebar-title">Contents</h2>
+
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(_nav.IsCurrent ? "is-current" : "")"
+                               href="@ToGuideRoute(_nav.Slug)">
+                                @_nav.Title
+                            </a>
+                        </li>
+                    </ul>
+
+                    @if (_nav.Children.Any())
+                    {
+                        @RenderNav(_nav)
+                    }
+                </div>
+            </aside>
+        }
+
+
+
+        <article class="prose doc-main">
+            @((MarkupString)_html)
+        </article>
+    </div>
+}
+
+@code {
+    [Parameter] public string? slug { get; set; }
+
+    private string _title = "Loading...";
+    private string? _description;
+    private string? _ogImage;
+    private string? _canonical;
+    private bool _noIndex;
+
+    private bool _notFound;
+    private string? _html;
+    private string _pageTitleFull = "Loading...";
+    private string _jsonLd = "";
+    private NavNode? _nav;
+    private string _navRootSlug = "";
+    private List<DocEntry> _children = new();
+    private RenderFragment RenderNav(NavNode node) => @<ul class="sidebar-list">
+@foreach (var child in node.Children)
+    {
+    var isOpen = child.IsAncestorOfCurrent; // auto expand path to current
+    <li class="sidebar-item">
+        <a class="sidebar-link @(child.IsCurrent ? "is-current" : "")"
+           href="@ToGuideRoute(child.Slug)">
+            @child.Title
+        </a>
+
+        @if (isOpen && child.Children.Any())
+                {
+        @RenderNav(child)
+                }
+    </li>
+    }
+</ul>;
+
+private string ToGuideRoute(string contentSlug)
+{
+    contentSlug = (contentSlug ?? "").Trim('/').Replace('\\', '/');
+
+    // the page route is already /guide/{**slug}
+    if (contentSlug.Equals("guide", StringComparison.OrdinalIgnoreCase))
+        return "/guide";
+
+    if (contentSlug.StartsWith("guide/", StringComparison.OrdinalIgnoreCase))
+        contentSlug = contentSlug["guide/".Length..];
+
+    // If the slug accidentally contains ".md", remove it
+    if (contentSlug.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        contentSlug = contentSlug[..^3].TrimEnd('/');
+
+    // Map "timer/index" to "/guide/timer" (nicer URLs)
+    if (contentSlug.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
+        contentSlug = contentSlug[..^"/index".Length].TrimEnd('/');
+
+    return string.IsNullOrWhiteSpace(contentSlug) ? "/guide" : $"/guide/{contentSlug}";
+}
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var ctx = HttpContextAccessor.HttpContext!;
+        var host = ctx.Request.Host.Host;
+
+        var (doc, _) = await Store.TryGetByRequestAsync(slug, host);
+        var normalized = (slug ?? "").Trim('/');
+
+
+        _navRootSlug = Store.GetNavRootSlug(normalized);
+        _nav = Store.BuildNavTree(_navRootSlug, normalized);
+
+
+        if (doc is null)
+        {
+            _notFound = true;
+            _title = "Not found";
+            _description = null;
+            _ogImage = null;
+            _noIndex = true;
+            _canonical = BuildCanonical(ctx, slug ?? "");
+            return;
+        }
+
+        _notFound = false;
+        _title = doc.Title;
+        _description = doc.Description;
+        _ogImage = doc.OgImage;
+        _noIndex = doc.NoIndex;
+        _canonical = BuildCanonical(ctx, doc.Slug, doc.Canonical);
+
+        _pageTitleFull = $"{_title} | {Brand.SiteName}";
+
+        var ogAbs = !string.IsNullOrWhiteSpace(_ogImage)
+            ? ToAbsolute(_ogImage)
+            : (!string.IsNullOrWhiteSpace(Brand.DefaultOgImage) ? ToAbsolute(Brand.DefaultOgImage) : null);
+
+        _jsonLd = BuildJsonLd(_pageTitleFull, _description ?? Brand.Tagline, _canonical, ogAbs);
+
+        _html = Renderer.ToHtml(doc.Html);
+
+
+    }
+
+    private static string BuildCanonical(HttpContext ctx, string slug, string? canonicalOverride = null)
+{
+    if (!string.IsNullOrWhiteSpace(canonicalOverride))
+        return canonicalOverride.Trim();
+
+    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}".TrimEnd('/');
+    slug = (slug ?? "").Trim('/');
+
+    return string.IsNullOrWhiteSpace(slug) ? $"{baseUrl}/" : $"{baseUrl}/{slug}";
+}
+
+private string ToAbsolute(string urlOrPath)
+{
+    if (string.IsNullOrWhiteSpace(urlOrPath)) return urlOrPath;
+
+    if (urlOrPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+        urlOrPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        return urlOrPath;
+
+    var ctx = HttpContextAccessor.HttpContext!;
+    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}".TrimEnd('/');
+    if (!urlOrPath.StartsWith('/')) urlOrPath = "/" + urlOrPath;
+    return baseUrl + urlOrPath;
+}
+
+private string BuildJsonLd(string pageTitle, string? description, string canonical, string? ogImageAbs)
+{
+    static string J(string? s) =>
+        (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    var siteName = Brand.SiteName;
+    var tagline = Brand.Tagline;
+
+    // WebSite + WebPage/Article
+    return $@"
+{{
+  ""@context"": ""https://schema.org"",
+  ""@graph"": [
+    {{
+      ""@type"": ""WebSite"",
+      ""name"": ""{J(siteName)}"",
+      ""url"": ""{J($"{HttpContextAccessor.HttpContext!.Request.Scheme}://{HttpContextAccessor.HttpContext!.Request.Host}/")}"" ,
+      ""description"": ""{J(tagline)}""
+    }},
+    {{
+      ""@type"": ""WebPage"",
+      ""name"": ""{J(pageTitle)}"",
+      ""url"": ""{J(canonical)}"",
+      ""description"": ""{J(description)}""
+      {(string.IsNullOrWhiteSpace(ogImageAbs) ? "" : $@", ""primaryImageOfPage"": {{ ""@type"": ""ImageObject"", ""url"": ""{J(ogImageAbs)}"" }}")}
+    }}
+  ]
+}}".Trim();
+}
+
+}

@@ -321,3 +321,118 @@ main {
     display: inline-block;
     padding: 2px 0;
 }
+
+
+/* Docs layout (sidebar + main) */
+.doc-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* Sidebar */
+.doc-sidebar {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+}
+
+.sidebar-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow);
+}
+
+.sidebar-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.sidebar-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-item {
+    margin: 0;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none; /* remove underline inside nav */
+    color: var(--text);
+    border: 1px solid transparent;
+}
+
+    .sidebar-link:hover {
+        border-color: #3a4656;
+        text-decoration: underline;
+        text-underline-offset: .18em;
+    }
+
+    .sidebar-link.is-current {
+        background: #0f1318;
+        border-color: #3a4656;
+    }
+
+/* Main article */
+.doc-main {
+    min-width: 0; /* prevents overflow from long code blocks */
+}
+
+/* Give markdown content nicer spacing within your global typography */
+.prose h1 {
+    margin-top: 0;
+}
+
+.prose h2 {
+    margin-top: 22px;
+}
+
+.prose h3 {
+    margin-top: 18px;
+}
+
+.prose pre {
+    margin: 12px 0;
+}
+
+.prose table {
+    margin: 12px 0;
+}
+
+/* Mobile: stack sidebar above content */
+@media (max-width: 900px) {
+    .doc-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .doc-sidebar {
+        position: static;
+        top: auto;
+    }
+}
+.sidebar-list .sidebar-list {
+    margin-left: 12px;
+    padding-left: 10px;
+    border-left: 1px solid var(--border);
+}
+
+    .sidebar-list .sidebar-list .sidebar-link {
+        padding-left: 14px;
+        font-size: 0.95rem;
+    }
+
+.sidebar-item .is-current + .sidebar-list,
+.sidebar-item .is-current {
+    font-weight: 600;
+}

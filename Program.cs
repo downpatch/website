@@ -1,4 +1,7 @@
 using downpatch.Components;
+using downpatch.Data;
+using downpatch.Services;
+using Markdig.Renderers;
 
 namespace downpatch
 {
@@ -10,7 +13,23 @@ namespace downpatch
 
             // Add services to the container.
             builder.Services.AddRazorComponents();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddRouting();
+            builder.Services.Configure<MarkdownOptions>(
+            builder.Configuration.GetSection(MarkdownOptions.SectionName));
 
+            builder.Services.AddSingleton<MarkdownStore>();
+            builder.Services.AddSingleton<MarkdownRenderer>();
+
+            builder.Services.AddSingleton(new SiteBranding
+            {
+                SiteName = "downpatch.com",
+                Tagline = "A source of truth for getting started with speedrunning.",
+                DefaultOgImage = "/assets/og/default.png",
+                TwitterHandle = null,
+                GitHubUrl = "https://github.com/downpatch",
+                ThemeColor = "#0b0f14"
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
