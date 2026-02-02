@@ -28,7 +28,7 @@ namespace downpatch
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>();
-
+            app.UseForwardedHeaders();
             app.Run();
         }
     }
