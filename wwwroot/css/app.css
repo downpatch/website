@@ -22,3 +22,65 @@
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Sticky external links (bottom-right) */
+.sticky-links {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.sticky-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    background: #111827; /* dark */
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+    .sticky-btn:hover,
+    .sticky-btn:focus-visible {
+        text-decoration: underline;
+        outline: none;
+        border-color: rgba(255,255,255,0.22);
+    }
+
+    .sticky-btn i {
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+
+@media (max-width: 420px) {
+    .sticky-label {
+        display: none;
+    }
+}
+
+.visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-height: 500px) {
+    .sticky-links {
+        bottom: 0.5rem;
+        right: 0.5rem;
+    }
+}
