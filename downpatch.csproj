@@ -11,12 +11,6 @@
     <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Content/**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
 
 
 </Project>
