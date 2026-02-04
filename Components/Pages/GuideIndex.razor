@@ -75,7 +75,7 @@
             @foreach (var item in Filtered)
             {
                 var href = ToGuide(item.Slug);
-                var img = $"{href.TrimEnd('/')}/square.webp";
+                var img = $"content/{href.TrimEnd('/')}/square.webp";
 
                 <a class="game-card" role="listitem" href="@href">
                     <div class="game-card__media">
