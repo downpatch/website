@@ -4,7 +4,7 @@
     {
         public const string SectionName = "Markdown";
 
-        public string ContentRoot { get; set; } = "Content";
+        public string ContentRoot { get; set; } = "wwwroot/Content";
         public string DefaultDocument { get; set; } = "index.md";
         public bool PreferIndexFiles { get; set; } = true;
 
