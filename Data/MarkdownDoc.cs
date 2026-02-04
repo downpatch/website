@@ -17,6 +17,7 @@
         public string? Canonical { get; init; }
         public bool NoIndex { get; init; }
         public string? OgImage { get; init; }
+        public string? SquareImage { get; init; }
 
         public required string Html { get; init; }
         public required DateTime LastModifiedUtc { get; init; }

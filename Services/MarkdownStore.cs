@@ -126,7 +126,6 @@ namespace downpatch.Services
             var description = fm.GetString("description");
             var canonical = fm.GetString("canonical");
             var noindex = fm.GetBool("noindex", defaultValue: false);
-            var ogImage = fm.GetString("og_image") ?? fm.GetString("og:image");
             var gameName = fm.GetString("game") ?? title;
             var leaderboardUrl = fm.GetString("leaderboard");
             var timingMethod = fm.GetString("timing_method"); // e.g. "RTA (AutoSplitter + LRT)" etc
@@ -134,6 +133,13 @@ namespace downpatch.Services
             var allowedVersions = fm.GetString("allowed_versions");
             var whereToBuy = fm.GetString("where_to_buy");
             var platforms = fm.GetList("platforms");
+
+
+            var ogImageRaw = fm.GetString("og_image") ?? fm.GetString("og:image");
+            var squareImageRaw = fm.GetString("square_image") ?? fm.GetString("square:image");
+
+            var ogImage = ResolveAssetPath(ogImageRaw, slug);
+            var squareImage = ResolveAssetPath(squareImageRaw, slug);
 
             var etag = ComputeETag(fi.Length, lastWrite);
 
@@ -156,7 +162,8 @@ namespace downpatch.Services
                 Html = body,
                 LastModifiedUtc = lastWrite,
                 ETag = etag,
-                OgImage = ogImage
+                OgImage = ogImage,
+                SquareImage = squareImage
             };
 
             Console.WriteLine($"slug={slug} path={path} exists={File.Exists(path)}");
@@ -339,6 +346,32 @@ namespace downpatch.Services
                 .ToList();
 
             return Task.FromResult(items);
+        }
+        private static string? ResolveAssetPath(string? raw, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+
+            raw = raw.Trim();
+
+            // Already absolute URL
+            if (raw.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                return raw;
+
+            // Already absolute path (site-root)
+            if (raw.StartsWith("/"))
+                return raw;
+
+            // Relative to the doc folder
+            // slug is like "guide/template-game" or "guide/template-game/index"
+            var cleanSlug = (slug ?? "").Trim('/');
+
+            if (cleanSlug.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
+                cleanSlug = cleanSlug[..^"/index".Length].TrimEnd('/');
+
+            // folder base under content
+            // -> /content/guide/template-game/ + raw
+            return $"/content/{cleanSlug}/{raw}".Replace("\\", "/");
         }
 
 

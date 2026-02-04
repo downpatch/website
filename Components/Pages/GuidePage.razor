@@ -40,19 +40,34 @@
     }
 
     @{
-        var ogImage = !string.IsNullOrWhiteSpace(_ogImage)
-        ? _ogImage
-        : Brand.DefaultOgImage;
+        var ogImage = !string.IsNullOrWhiteSpace(_ogImage) ? _ogImage : Brand.DefaultOgImage;
+        var squareImage = !string.IsNullOrWhiteSpace(_squareImage) ? _squareImage : "";
     }
+
     @if (!string.IsNullOrWhiteSpace(ogImage))
     {
         <meta property="og:image" content="@ToAbsolute(ogImage)" />
         <meta name="twitter:card" content="summary_large_image" />
     }
-    else
+
+    @if (!string.IsNullOrWhiteSpace(squareImage))
     {
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content="@ToAbsolute(squareImage)" />
+        <meta property="og:image:width" content="1024" />
+        <meta property="og:image:height" content="1024" />
+
+
+        <link rel="icon"
+              type="image/webp"
+              href="@ToAbsolute(_squareImage)" />
+
+        <link rel="apple-touch-icon"
+              href="@ToAbsolute(_squareImage)" />
+
+        <meta name="msapplication-TileImage"
+              content="@ToAbsolute(_squareImage)" />
     }
+
 
     <meta name="twitter:title" content="@_pageTitleFull" />
     @if (!string.IsNullOrWhiteSpace(_description))
@@ -161,6 +176,8 @@ else
     private string _title = "Loading...";
     private string? _description;
     private string? _ogImage;
+    private string? _squareImage;
+
     private string? _canonical;
     private bool _noIndex;
 
@@ -234,6 +251,8 @@ protected override async Task OnParametersSetAsync()
         _title = "Not found";
         _description = null;
         _ogImage = null;
+        _squareImage = doc.SquareImage;
+
         _noIndex = true;
         _canonical = BuildCanonical(ctx, slug ?? "");
         return;
@@ -243,6 +262,8 @@ protected override async Task OnParametersSetAsync()
     _title = doc.Title;
     _description = doc.Description;
     _ogImage = doc.OgImage;
+    _squareImage = doc.SquareImage;
+
     _noIndex = doc.NoIndex;
     _canonical = BuildCanonical(ctx, doc.Slug, doc.Canonical);
 
