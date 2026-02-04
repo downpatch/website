@@ -293,6 +293,8 @@ pre {
 .doc-hero2 {
     border-bottom: 1px solid var(--border);
     background: var(--surface-2);
+    overflow: hidden;
+    border-radius: 16px;
 }
 
     .doc-hero2[style*="--hero-image"] {
@@ -305,6 +307,13 @@ pre {
     max-width: var(--page-max);
     margin: 0 auto;
     padding: 2.25rem var(--pad);
+}
+
+.site-main > .doc-hero2 {
+    margin-left: calc(var(--pad) * -1);
+    margin-right: calc(var(--pad) * -1);
+    margin-top: calc(var(--pad) * -1);
+    border-radius: 16px 16px 0 0; 
 }
 
 .doc-kicker {
