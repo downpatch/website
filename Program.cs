@@ -1,5 +1,6 @@
 using downpatch.Components;
 using downpatch.Data;
+using downpatch.Endpoints;
 using downpatch.Services;
 using Markdig.Renderers;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -56,6 +57,8 @@ namespace downpatch
 
             app.UseAntiforgery();
             app.UseStaticFiles();
+            app.MapRobots();
+            app.MapSitemap();
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>();
