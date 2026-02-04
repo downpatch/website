@@ -59,3 +59,28 @@ jobs:
 
           sudo -n /usr/bin/systemctl restart downpatch.service
           EOF
+
+      - name: Clean Releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASES_DIR="/var/www/downpatch/releases"
+          CURRENT="$(readlink -f /var/www/downpatch/current)"
+
+          cd "$RELEASES_DIR"
+          [ "$(pwd -P)" = "$RELEASES_DIR" ] || exit 1
+
+          COUNT=0
+          ls -1dt */ | while read -r dir; do
+            FULL="$(readlink -f "$dir")"
+
+            # never delete the active release
+            [ "$FULL" = "$CURRENT" ] && continue
+
+            COUNT=$((COUNT+1))
+            if [ "$COUNT" -gt 4 ]; then
+              echo "Deleting $FULL"
+              rm -rf -- "$FULL"
+            fi
+          done
+
