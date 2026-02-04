@@ -8,57 +8,46 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject SiteBranding Brand
 
-<PageTitle>@_pageTitleFull</PageTitle>
+<PageTitle>@PageTitleFull</PageTitle>
 
 <HeadContent>
-    @* Basic *@
     <meta name="application-name" content="@Brand.SiteName" />
     @if (!string.IsNullOrWhiteSpace(Brand.ThemeColor))
     {
         <meta name="theme-color" content="@Brand.ThemeColor" />
     }
 
-    @if (!string.IsNullOrWhiteSpace(_canonical))
+    @if (!string.IsNullOrWhiteSpace(Canonical))
     {
-        <link rel="canonical" href="@_canonical" />
-        <meta property="og:url" content="@_canonical" />
+        <link rel="canonical" href="@Canonical" />
+        <meta property="og:url" content="@Canonical" />
     }
 
-    @if (!string.IsNullOrWhiteSpace(_description))
+    @if (!string.IsNullOrWhiteSpace(Description))
     {
-        <meta name="description" content="@_description" />
+        <meta name="description" content="@Description" />
     }
 
-    @* Social cards *@
     <meta property="og:site_name" content="@Brand.SiteName" />
-    <meta property="og:title" content="@_pageTitleFull" />
+    <meta property="og:title" content="@PageTitleFull" />
     <meta property="og:type" content="article" />
 
-    @if (!string.IsNullOrWhiteSpace(_description))
+    @if (!string.IsNullOrWhiteSpace(Description))
     {
-        <meta property="og:description" content="@_description" />
+        <meta property="og:description" content="@Description" />
     }
 
-    @{
-        var ogImage = !string.IsNullOrWhiteSpace(_ogImage) ? _ogImage : Brand.DefaultOgImage;
-        var squareImage = !string.IsNullOrWhiteSpace(_squareImage) ? _squareImage : "";
-    }
-
-
-
-    @if (!string.IsNullOrWhiteSpace(squareImage))
+    @if (!string.IsNullOrWhiteSpace(SquareImageAbs))
     {
-        <meta property="og:image" content="@ToAbsolute(squareImage)" />
+        <meta property="og:image" content="@SquareImageAbs" />
         <meta property="og:image:width" content="1024" />
         <meta property="og:image:height" content="1024" />
-
     }
 
-
-    <meta name="twitter:title" content="@_pageTitleFull" />
-    @if (!string.IsNullOrWhiteSpace(_description))
+    <meta name="twitter:title" content="@PageTitleFull" />
+    @if (!string.IsNullOrWhiteSpace(Description))
     {
-        <meta name="twitter:description" content="@_description" />
+        <meta name="twitter:description" content="@Description" />
     }
 
     @if (!string.IsNullOrWhiteSpace(Brand.TwitterHandle))
@@ -66,15 +55,13 @@
         <meta name="twitter:site" content="@Brand.TwitterHandle" />
     }
 
-    @if (_noIndex)
+    @if (NoIndex)
     {
         <meta name="robots" content="noindex,nofollow" />
     }
 
-    @* JSON-LD *@
     <script type="application/ld+json">@_jsonLd</script>
 </HeadContent>
-
 
 @if (_notFound)
 {
@@ -93,18 +80,41 @@ else
         <div class="doc-hero2-inner">
             <div class="doc-hero2-meta">
                 <p class="doc-kicker">Guide</p>
-                <h1 id="doc-title" class="doc-title">@_title</h1>
+                <h1 id="doc-title" class="doc-title">@Title</h1>
 
-                @if (!string.IsNullOrWhiteSpace(_description))
+                @if (!string.IsNullOrWhiteSpace(Description))
                 {
-                    <p class="doc-lead">@_description</p>
+                    <p class="doc-lead">@Description</p>
                 }
 
                 <div class="doc-actions" role="navigation" aria-label="Document actions">
-                    <a class="doc-action" href="/guide">All guides</a>
-                    @if (!string.IsNullOrWhiteSpace(_canonical))
+                    <a class="doc-action" href="/guide">
+                        <i class="bi bi-file-earmark-text"></i>
+                        All guides
+                    </a>
+
+                    @if (!string.IsNullOrWhiteSpace(Canonical))
                     {
-                        <a class="doc-action" href="@_canonical">Permalink</a>
+                        <a class="doc-action" href="@Canonical">
+                            <i class="bi bi-link-45deg"></i>
+                            Permalink
+                        </a>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(LeaderboardUrl))
+                    {
+                        <a class="doc-action" href="@LeaderboardUrl">
+                            <i class="bi bi-trophy"></i>
+                            Leaderboard
+                        </a>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(DiscordUrl))
+                    {
+                        <a class="doc-action" href="@DiscordUrl">
+                            <i class="bi bi-discord"></i>
+                            Discord
+                        </a>
                     }
                 </div>
             </div>
@@ -155,25 +165,42 @@ else
     </div>
 }
 
-
 @code {
     [Parameter] public string? slug { get; set; }
 
-    private string _title = "Loading...";
-    private string? _description;
-    private string? _ogImage;
-    private string? _squareImage;
-
-    private string? _canonical;
-    private bool _noIndex;
-
+    private MarkdownDoc? _doc;
     private bool _notFound;
+
     private string? _html;
+    private string _canonical = "";
     private string _pageTitleFull = "Loading...";
     private string _jsonLd = "";
+
     private NavNode? _nav;
     private string _navRootSlug = "";
-    private List<DocEntry> _children = new();
+
+    // ---- computed doc fields ----
+    private string Title => _doc?.Title ?? (_notFound ? "Not found" : "Loading...");
+    private string? Description => _doc?.Description;
+    private bool NoIndex => _doc?.NoIndex ?? _notFound;
+
+    private string Canonical => _canonical;
+    private string PageTitleFull => _pageTitleFull;
+
+    private string? LeaderboardUrl => _doc?.LeaderboardUrl;
+    private string? DiscordUrl => _doc?.DiscordURL;
+
+    private string? OgImagePath => !string.IsNullOrWhiteSpace(_doc?.OgImage) ? _doc!.OgImage : Brand.DefaultOgImage;
+    private string? SquareImagePath => _doc?.SquareImage;
+
+    private string? OgImageAbs => !string.IsNullOrWhiteSpace(OgImagePath) ? ToAbsolute(OgImagePath!) : null;
+    private string? SquareImageAbs => !string.IsNullOrWhiteSpace(SquareImagePath) ? ToAbsolute(SquareImagePath!) : null;
+
+    private string HeroStyle
+        => !string.IsNullOrWhiteSpace(OgImageAbs)
+            ? $"--hero-image: url('{OgImageAbs}');"
+            : "";
+
     private RenderFragment RenderNav(NavNode node) => @<ul class="nav-list nav-list--nested">
 @foreach (var child in node.Children)
     {
@@ -192,78 +219,55 @@ else
     </li>
     }
 </ul>;
-private string HeroStyle
-        => string.IsNullOrWhiteSpace(_ogImage)
-            ? ""
-            : $"--hero-image: url('{ToAbsolute(_ogImage)}');";
-private string ToGuideRoute(string contentSlug)
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var ctx = HttpContextAccessor.HttpContext!;
+        var host = ctx.Request.Host.Host;
+
+        var (doc, _) = await Store.TryGetByRequestAsync(slug, host);
+        _doc = doc;
+
+        var normalized = (slug ?? "").Trim('/');
+        _navRootSlug = Store.GetNavRootSlug(normalized);
+        _nav = Store.BuildNavTree(_navRootSlug, normalized);
+
+        _notFound = doc is null;
+
+        // canonical works even for not-found
+        _canonical = _notFound
+            ? BuildCanonical(ctx, slug ?? "")
+            : BuildCanonical(ctx, doc!.Slug, doc.Canonical);
+
+        _pageTitleFull = $"{Title} | {Brand.SiteName}";
+
+        _jsonLd = BuildJsonLd(
+            _pageTitleFull,
+            Description ?? Brand.Tagline,
+            _canonical,
+            OgImageAbs
+        );
+
+        _html = _notFound ? null : Renderer.ToHtml(doc!.Html);
+    }
+
+    private string ToGuideRoute(string contentSlug)
 {
     contentSlug = (contentSlug ?? "").Trim('/').Replace('\\', '/');
 
-    // the page route is already /guide/{**slug}
     if (contentSlug.Equals("guide", StringComparison.OrdinalIgnoreCase))
         return "/guide";
 
     if (contentSlug.StartsWith("guide/", StringComparison.OrdinalIgnoreCase))
         contentSlug = contentSlug["guide/".Length..];
 
-    // If the slug accidentally contains ".md", remove it
     if (contentSlug.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
         contentSlug = contentSlug[..^3].TrimEnd('/');
 
-    // Map "timer/index" to "/guide/timer" (nicer URLs)
     if (contentSlug.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
         contentSlug = contentSlug[..^"/index".Length].TrimEnd('/');
 
     return string.IsNullOrWhiteSpace(contentSlug) ? "/guide" : $"/guide/{contentSlug}";
-}
-
-protected override async Task OnParametersSetAsync()
-{
-    var ctx = HttpContextAccessor.HttpContext!;
-    var host = ctx.Request.Host.Host;
-
-    var (doc, _) = await Store.TryGetByRequestAsync(slug, host);
-    var normalized = (slug ?? "").Trim('/');
-
-
-    _navRootSlug = Store.GetNavRootSlug(normalized);
-    _nav = Store.BuildNavTree(_navRootSlug, normalized);
-
-
-    if (doc is null)
-    {
-        _notFound = true;
-        _title = "Not found";
-        _description = null;
-        _ogImage = null;
-        _squareImage = doc.SquareImage;
-
-        _noIndex = true;
-        _canonical = BuildCanonical(ctx, slug ?? "");
-        return;
-    }
-
-    _notFound = false;
-    _title = doc.Title;
-    _description = doc.Description;
-    _ogImage = doc.OgImage;
-    _squareImage = doc.SquareImage;
-
-    _noIndex = doc.NoIndex;
-    _canonical = BuildCanonical(ctx, doc.Slug, doc.Canonical);
-
-    _pageTitleFull = $"{_title} | {Brand.SiteName}";
-
-    var ogAbs = !string.IsNullOrWhiteSpace(_ogImage)
-        ? ToAbsolute(_ogImage)
-        : (!string.IsNullOrWhiteSpace(Brand.DefaultOgImage) ? ToAbsolute(Brand.DefaultOgImage) : null);
-
-    _jsonLd = BuildJsonLd(_pageTitleFull, _description ?? Brand.Tagline, _canonical, ogAbs);
-
-    _html = Renderer.ToHtml(doc.Html);
-
-
 }
 
 private string BuildCanonical(HttpContext ctx, string? contentSlug, string? canonicalOverride = null)
@@ -272,13 +276,9 @@ private string BuildCanonical(HttpContext ctx, string? contentSlug, string? cano
         return canonicalOverride.Trim();
 
     var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}".TrimEnd('/');
-
-    // Use the same routing rules as the UI links
-    var path = ToGuideRoute(contentSlug ?? ""); // returns "/guide" or "/guide/{slug}"
-
+    var path = ToGuideRoute(contentSlug ?? "");
     return baseUrl + path;
 }
-
 
 private string ToAbsolute(string urlOrPath)
 {
@@ -302,7 +302,6 @@ private string BuildJsonLd(string pageTitle, string? description, string canonic
     var siteName = Brand.SiteName;
     var tagline = Brand.Tagline;
 
-    // WebSite + WebPage/Article
     return $@"
 {{
   ""@context"": ""https://schema.org"",
@@ -310,7 +309,7 @@ private string BuildJsonLd(string pageTitle, string? description, string canonic
     {{
       ""@type"": ""WebSite"",
       ""name"": ""{J(siteName)}"",
-      ""url"": ""{J($"{HttpContextAccessor.HttpContext!.Request.Scheme}://{HttpContextAccessor.HttpContext!.Request.Host}/")}"" ,
+      ""url"": ""{J($"{HttpContextAccessor.HttpContext!.Request.Scheme}://{HttpContextAccessor.HttpContext!.Request.Host}/")}"",
       ""description"": ""{J(tagline)}""
     }},
     {{
@@ -323,5 +322,4 @@ private string BuildJsonLd(string pageTitle, string? description, string canonic
   ]
 }}".Trim();
 }
-
 }

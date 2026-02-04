@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager nav
 
-<a class="skip-link" href="#main">Skip to main content</a>
+<a class="skip-link" href="@skipLink">Skip to main content</a>
 
 <header class="site-header">
     <div class="site-header-inner">
@@ -34,3 +35,12 @@
         <span class="visually-hidden"> (opens in a new tab)</span>
     </a>
 </nav>
+
+    @code {
+
+    private string skipLink => nav.Uri + "#main";
+
+
+
+
+    }

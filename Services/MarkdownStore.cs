@@ -128,8 +128,9 @@ namespace downpatch.Services
             var noindex = fm.GetBool("noindex", defaultValue: false);
             var gameName = fm.GetString("game") ?? title;
             var leaderboardUrl = fm.GetString("leaderboard");
-            var timingMethod = fm.GetString("timing_method"); // e.g. "RTA (AutoSplitter + LRT)" etc
-            var downpatchRequired = fm.GetString("downpatch"); // "yes|no|sometimes"
+            var discordURL = fm.GetString("discord");
+            var timingMethod = fm.GetString("timing_method"); 
+            var downpatchRequired = fm.GetString("downpatch"); 
             var allowedVersions = fm.GetString("allowed_versions");
             var whereToBuy = fm.GetString("where_to_buy");
             var platforms = fm.GetList("platforms");
@@ -151,6 +152,7 @@ namespace downpatch.Services
 
                 GameName = gameName,
                 LeaderboardUrl = leaderboardUrl,
+                DiscordURL = discordURL,
                 TimingMethod = timingMethod,
                 DownpatchRequired = downpatchRequired,
                 AllowedVersions = allowedVersions,
@@ -166,7 +168,6 @@ namespace downpatch.Services
                 SquareImage = squareImage
             };
 
-            Console.WriteLine($"slug={slug} path={path} exists={File.Exists(path)}");
 
             _cache[path] = new CacheEntry(lastWrite, doc);
             return (doc, fi);

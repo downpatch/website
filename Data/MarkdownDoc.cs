@@ -8,6 +8,7 @@
 
         public string? GameName { get; init; }
         public string? LeaderboardUrl { get; init; }
+        public string? DiscordURL { get; init; }
         public string? TimingMethod { get; init; }
         public string? DownpatchRequired { get; init; } 
         public string? AllowedVersions { get; init; }
