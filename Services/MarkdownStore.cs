@@ -330,6 +330,16 @@ namespace downpatch.Services
                 .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
+        public Task<List<DocEntry>> GetGuideIndexAsync(string host, CancellationToken ct = default)
+        {
+            var items = GetChildren("")
+                .Where(x => !x.NavHide)
+                .OrderBy(x => x.Order)
+                .ThenBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return Task.FromResult(items);
+        }
 
 
         private sealed record CacheEntry(DateTime LastWriteUtc, MarkdownDoc Doc);

@@ -1,0 +1,132 @@
+﻿@page "/guide"
+@using downpatch.Data
+@using downpatch.Services
+@inject MarkdownStore Store
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Guides</PageTitle>
+
+<header class="guide-hero" aria-labelledby="guide-title">
+    <div class="guide-hero-inner">
+        <div class="guide-hero-copy">
+            <p class="guide-kicker">Guides</p>
+            <h1 id="guide-title" class="guide-title">Find your game</h1>
+            <p class="guide-lead">
+                Search for a game, then jump straight into the guide.
+            </p>
+        </div>
+
+        <form class="guide-search" role="search" aria-label="Search guides" method="get" action="/guide">
+            <label class="visually-hidden" for="q">Search games</label>
+
+            <div class="guide-search__wrap">
+                <span class="guide-search__icon" aria-hidden="true">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input id="q"
+                       name="q"
+                       class="guide-search__input"
+                       value="@Query"
+                       @oninput="OnSearchInput"
+                       placeholder="Search games..."
+                       autocomplete="off" />
+
+                @if (!string.IsNullOrWhiteSpace(Query))
+                {
+                    <a class="guide-search__clear"
+                       href="/guide"
+                       aria-label="Clear search">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                }
+
+                <button type="submit"
+                        class="guide-search__submit-btn"
+                        aria-label="Search">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+
+
+            <noscript>
+                <button class="guide-search__submit" type="submit">Search</button>
+            </noscript>
+        </form>
+    </div>
+</header>
+
+<section class="guide-results" aria-label="Guide results">
+    <div class="guide-meta" aria-live="polite">
+        <span class="guide-count">@FilteredCount guide@(FilteredCount == 1 ? "" : "s")</span>
+    </div>
+
+    @if (_all.Count == 0)
+    {
+        <p class="guide-empty">No guides found.</p>
+    }
+    else if (!Filtered.Any())
+    {
+        <p class="guide-empty">No matches for “@Query”.</p>
+    }
+    else
+    {
+        <div class="guide-grid" role="list">
+            @foreach (var item in Filtered)
+            {
+                var href = ToGuide(item.Slug);
+                var img = $"{href.TrimEnd('/')}/square.webp";
+
+                <a class="game-card" role="listitem" href="@href">
+                    <div class="game-card__media">
+                        <img class="game-card__img"
+                             src="@img"
+                             alt=""
+                             loading="lazy"
+                             decoding="async"
+                             onerror="this.style.display='none'; this.closest('.game-card__media')?.classList.add('is-fallback');" />
+
+                        <div class="game-card__fallback" aria-hidden="true">
+                            <i class="bi bi-controller"></i>
+                        </div>
+                    </div>
+
+                    <div class="game-card__body">
+                        <div class="game-card__title">@item.Title</div>
+                        <div class="game-card__cta" aria-hidden="true">
+                            <span>Open guide</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private string Query { get; set; } = "";
+    private List<DocEntry> _all = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var ctx = HttpContextAccessor.HttpContext!;
+        Query = (ctx.Request.Query["q"].ToString() ?? "").Trim();
+        _all = await Store.GetGuideIndexAsync(ctx.Request.Host.Host);
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+        => Query = (e.Value?.ToString() ?? "").Trim();
+
+    private IEnumerable<DocEntry> Filtered =>
+        string.IsNullOrWhiteSpace(Query)
+            ? _all
+            : _all.Where(x =>
+                (x.Title?.Contains(Query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (x.Slug?.Contains(Query, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private int FilteredCount => Filtered.Count();
+
+    private string ToGuide(string slug)
+        => "/guide/" + (slug ?? "").Trim('/').Replace('\\', '/');
+}

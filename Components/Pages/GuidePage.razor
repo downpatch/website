@@ -1,5 +1,4 @@
-﻿@page "/guide"
-@page "/guide/{**slug}"
+﻿@page "/guide/{**slug}"
 @using Microsoft.AspNetCore.Components.Web
 @using downpatch.Data
 @using downpatch.Services
@@ -87,37 +86,74 @@ else if (_html is null)
 }
 else
 {
-    <div class="doc-layout">
-        @if (_nav is not null)
-        {
-            <aside class="doc-sidebar" aria-label="Section contents">
-                <div class="sidebar-card">
-                    <h2 class="sidebar-title">Contents</h2>
+    <a class="skip-link" href="#doc-content">Skip to content</a>
 
-                    <ul class="sidebar-list">
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @(_nav.IsCurrent ? "is-current" : "")"
-                               href="@ToGuideRoute(_nav.Slug)">
-                                @_nav.Title
-                            </a>
-                        </li>
-                    </ul>
+    <header class="doc-hero2" style="@HeroStyle" aria-labelledby="doc-title">
+        <div class="doc-hero2-inner">
+            <div class="doc-hero2-meta">
+                <p class="doc-kicker">Guide</p>
+                <h1 id="doc-title" class="doc-title">@_title</h1>
 
-                    @if (_nav.Children.Any())
+                @if (!string.IsNullOrWhiteSpace(_description))
+                {
+                    <p class="doc-lead">@_description</p>
+                }
+
+                <div class="doc-actions" role="navigation" aria-label="Document actions">
+                    <a class="doc-action" href="/guide">All guides</a>
+                    @if (!string.IsNullOrWhiteSpace(_canonical))
                     {
-                        @RenderNav(_nav)
+                        <a class="doc-action" href="@_canonical">Permalink</a>
                     }
                 </div>
-            </aside>
+            </div>
+        </div>
+    </header>
+
+    <div class="doc-shell">
+        @if (_nav is not null)
+        {
+            <nav class="doc-nav" aria-label="Guide navigation">
+                <div class="nav-card">
+                    <div class="nav-head">
+                        <h2 class="nav-title">Contents</h2>
+                    </div>
+
+                    <div class="nav-body">
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a class="nav-link @(_nav.IsCurrent ? "is-current" : "")"
+                                   href="@ToGuideRoute(_nav.Slug)"
+                                   aria-current="@(_nav.IsCurrent ? "page" : null)">
+                                    @_nav.Title
+                                </a>
+                            </li>
+                        </ul>
+
+                        @if (_nav.Children.Any())
+                        {
+                            @RenderNav(_nav)
+                        }
+                    </div>
+                </div>
+            </nav>
         }
 
+        <main id="doc-content" class="doc-content" tabindex="-1" aria-label="Document content">
+            <article class="prose doc-article">
+                @((MarkupString)_html)
+            </article>
 
-
-        <article class="prose doc-main">
-            @((MarkupString)_html)
-        </article>
+            <footer class="doc-footer">
+                <hr />
+                <p class="muted">
+                    Found an issue? Edit the markdown and submit a PR.
+                </p>
+            </footer>
+        </main>
     </div>
 }
+
 
 @code {
     [Parameter] public string? slug { get; set; }
@@ -135,13 +171,14 @@ else
     private NavNode? _nav;
     private string _navRootSlug = "";
     private List<DocEntry> _children = new();
-    private RenderFragment RenderNav(NavNode node) => @<ul class="sidebar-list">
+    private RenderFragment RenderNav(NavNode node) => @<ul class="nav-list nav-list--nested">
 @foreach (var child in node.Children)
     {
-    var isOpen = child.IsAncestorOfCurrent; // auto expand path to current
-    <li class="sidebar-item">
-        <a class="sidebar-link @(child.IsCurrent ? "is-current" : "")"
-           href="@ToGuideRoute(child.Slug)">
+    var isOpen = child.IsAncestorOfCurrent;
+    <li class="nav-item">
+        <a class="nav-link @(child.IsCurrent ? "is-current" : "")"
+           href="@ToGuideRoute(child.Slug)"
+           aria-current="@(child.IsCurrent ? "page" : null)">
             @child.Title
         </a>
 
@@ -152,7 +189,10 @@ else
     </li>
     }
 </ul>;
-
+private string HeroStyle
+        => string.IsNullOrWhiteSpace(_ogImage)
+            ? ""
+            : $"--hero-image: url('{ToAbsolute(_ogImage)}');";
 private string ToGuideRoute(string contentSlug)
 {
     contentSlug = (contentSlug ?? "").Trim('/').Replace('\\', '/');
@@ -175,60 +215,63 @@ private string ToGuideRoute(string contentSlug)
     return string.IsNullOrWhiteSpace(contentSlug) ? "/guide" : $"/guide/{contentSlug}";
 }
 
-    protected override async Task OnParametersSetAsync()
+protected override async Task OnParametersSetAsync()
+{
+    var ctx = HttpContextAccessor.HttpContext!;
+    var host = ctx.Request.Host.Host;
+
+    var (doc, _) = await Store.TryGetByRequestAsync(slug, host);
+    var normalized = (slug ?? "").Trim('/');
+
+
+    _navRootSlug = Store.GetNavRootSlug(normalized);
+    _nav = Store.BuildNavTree(_navRootSlug, normalized);
+
+
+    if (doc is null)
     {
-        var ctx = HttpContextAccessor.HttpContext!;
-        var host = ctx.Request.Host.Host;
-
-        var (doc, _) = await Store.TryGetByRequestAsync(slug, host);
-        var normalized = (slug ?? "").Trim('/');
-
-
-        _navRootSlug = Store.GetNavRootSlug(normalized);
-        _nav = Store.BuildNavTree(_navRootSlug, normalized);
-
-
-        if (doc is null)
-        {
-            _notFound = true;
-            _title = "Not found";
-            _description = null;
-            _ogImage = null;
-            _noIndex = true;
-            _canonical = BuildCanonical(ctx, slug ?? "");
-            return;
-        }
-
-        _notFound = false;
-        _title = doc.Title;
-        _description = doc.Description;
-        _ogImage = doc.OgImage;
-        _noIndex = doc.NoIndex;
-        _canonical = BuildCanonical(ctx, doc.Slug, doc.Canonical);
-
-        _pageTitleFull = $"{_title} | {Brand.SiteName}";
-
-        var ogAbs = !string.IsNullOrWhiteSpace(_ogImage)
-            ? ToAbsolute(_ogImage)
-            : (!string.IsNullOrWhiteSpace(Brand.DefaultOgImage) ? ToAbsolute(Brand.DefaultOgImage) : null);
-
-        _jsonLd = BuildJsonLd(_pageTitleFull, _description ?? Brand.Tagline, _canonical, ogAbs);
-
-        _html = Renderer.ToHtml(doc.Html);
-
-
+        _notFound = true;
+        _title = "Not found";
+        _description = null;
+        _ogImage = null;
+        _noIndex = true;
+        _canonical = BuildCanonical(ctx, slug ?? "");
+        return;
     }
 
-    private static string BuildCanonical(HttpContext ctx, string slug, string? canonicalOverride = null)
+    _notFound = false;
+    _title = doc.Title;
+    _description = doc.Description;
+    _ogImage = doc.OgImage;
+    _noIndex = doc.NoIndex;
+    _canonical = BuildCanonical(ctx, doc.Slug, doc.Canonical);
+
+    _pageTitleFull = $"{_title} | {Brand.SiteName}";
+
+    var ogAbs = !string.IsNullOrWhiteSpace(_ogImage)
+        ? ToAbsolute(_ogImage)
+        : (!string.IsNullOrWhiteSpace(Brand.DefaultOgImage) ? ToAbsolute(Brand.DefaultOgImage) : null);
+
+    _jsonLd = BuildJsonLd(_pageTitleFull, _description ?? Brand.Tagline, _canonical, ogAbs);
+
+    _html = Renderer.ToHtml(doc.Html);
+
+
+}
+
+private string BuildCanonical(HttpContext ctx, string? contentSlug, string? canonicalOverride = null)
 {
     if (!string.IsNullOrWhiteSpace(canonicalOverride))
         return canonicalOverride.Trim();
 
     var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}".TrimEnd('/');
-    slug = (slug ?? "").Trim('/');
 
-    return string.IsNullOrWhiteSpace(slug) ? $"{baseUrl}/" : $"{baseUrl}/{slug}";
+    // Use the same routing rules as the UI links
+    var path = ToGuideRoute(contentSlug ?? ""); // returns "/guide" or "/guide/{slug}"
+
+    return baseUrl + path;
 }
+
 
 private string ToAbsolute(string urlOrPath)
 {
