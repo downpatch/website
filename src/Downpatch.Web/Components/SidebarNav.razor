@@ -1,0 +1,55 @@
+﻿@using Downpatch.Web.Services
+
+<nav aria-label="Contents">
+    <ul class="nav-list">
+        @foreach (var n in Nodes)
+        {
+            @RenderNode(n)
+        }
+    </ul>
+</nav>
+
+@code {
+    [Parameter] public IReadOnlyList<NavNode> Nodes { get; set; } = Array.Empty<NavNode>();
+    [Parameter] public string CurrentPath { get; set; } = "/guide";
+
+    private RenderFragment RenderNode(NavNode node) => @<li class="nav-item">
+        @if (!string.IsNullOrWhiteSpace(node.Href))
+        {
+            var active = IsActive(node.Href!);
+                <a class="nav-link @(active ? "is-current" : "")" href="@node.Href" aria-current="@(active ? "page" : null)">
+                    @node.Name
+                </a>
+        }
+        else
+        {
+                <span class="nav-group">@node.Name</span>
+        }
+
+        @if (node.Items.Count > 0)
+        {
+                <ul class="nav-list nav-list--nested">
+                    @foreach (var child in node.Items)
+                    {
+                        @RenderNode(child)
+                    }
+                </ul>
+        }
+    </li>;
+
+private bool IsActive(string href)
+{
+if (href.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+return false;
+
+return string.Equals(Norm(href), Norm(CurrentPath), StringComparison.OrdinalIgnoreCase);
+}
+
+private static string Norm(string p)
+{
+p = (p ?? "").Replace('\\', '/').Trim();
+if (!p.StartsWith("/")) p = "/" + p;
+p = p.TrimEnd('/');
+return p.Length == 0 ? "/" : p;
+}
+}

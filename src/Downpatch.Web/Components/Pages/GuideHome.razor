@@ -1,0 +1,206 @@
+﻿@page "/guide"
+@using Downpatch.Web.Services
+@inject ContentIndex Index
+@inject MarkdownPageService Pages
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Guides</PageTitle>
+<HeadContent>
+    <meta name="description"
+          content="Browse speedrunning setup guides by game. Each page covers timing, LiveSplit setup, version requirements, and links to the right community pages." />
+</HeadContent>
+
+<header class="guide-hero" aria-labelledby="guide-title">
+    <div class="guide-hero-inner">
+        <div class="guide-hero-copy">
+            <p class="guide-kicker">Guides</p>
+            <h1 id="guide-title" class="guide-title">Find your game</h1>
+            <p class="guide-lead">Search for a game, then jump straight into the guide.</p>
+        </div>
+
+        <form class="guide-search" role="search" aria-label="Search guides" method="get" action="/guide">
+            <label class="visually-hidden" for="q">Search games</label>
+
+            <div class="guide-search__wrap">
+                <span class="guide-search__icon" aria-hidden="true">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input id="q"
+                       name="q"
+                       class="guide-search__input"
+                       value="@Query"
+                       placeholder="Search games..."
+                       autocomplete="off" />
+
+                @if (!string.IsNullOrWhiteSpace(Query))
+                {
+                    <a class="guide-search__clear"
+                       href="/guide"
+                       aria-label="Clear search">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                }
+
+                <button type="submit"
+                        class="guide-search__submit-btn"
+                        aria-label="Search">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+
+            <noscript>
+                <button class="guide-search__submit" type="submit">Search</button>
+            </noscript>
+        </form>
+    </div>
+</header>
+
+<section class="guide-results" aria-label="Guide results">
+    <div class="guide-meta" aria-live="polite">
+        <span class="guide-count">@FilteredCount guide@(FilteredCount == 1 ? "" : "s")</span>
+    </div>
+
+    @if (_all.Count == 0)
+    {
+        <p class="guide-empty">No guides found.</p>
+    }
+    else if (!Filtered.Any())
+    {
+        <p class="guide-empty">No matches for “@Query”.</p>
+    }
+    else
+    {
+        <div class="guide-grid" role="list">
+            @foreach (var item in Filtered)
+            {
+                var href = item.Href;
+                var img = item.SquareImagePath;
+
+                <a class="game-card" role="listitem" href="@href">
+                    <div class="game-card__media">
+                        @if (!string.IsNullOrWhiteSpace(img))
+                        {
+                            <img class="game-card__img"
+                                 src="@img"
+                                 alt=""
+                                 loading="lazy"
+                                 decoding="async" />
+                        }
+
+                        <div class="game-card__fallback" aria-hidden="true">
+                            <i class="bi bi-controller"></i>
+                        </div>
+                    </div>
+
+
+                    <div class="game-card__body">
+                        <div class="game-card__title">@item.Title</div>
+                        <div class="game-card__cta" aria-hidden="true">
+                            <span>Open guide</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private string Query { get; set; } = "";
+    private List<GuideCard> _all = new();
+
+    protected override void OnInitialized()
+    {
+        var ctx = HttpContextAccessor.HttpContext!;
+        Query = (ctx.Request.Query["q"].ToString() ?? "").Trim();
+
+        _all = BuildGuideCards();
+    }
+
+    private IEnumerable<GuideCard> Filtered =>
+        string.IsNullOrWhiteSpace(Query)
+            ? _all
+            : _all.Where(x =>
+                (x.Title?.Contains(Query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (x.Slug?.Contains(Query, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private int FilteredCount => Filtered.Count();
+
+    private List<GuideCard> BuildGuideCards()
+    {
+        var list = new List<GuideCard>();
+
+        foreach (var entry in Index.AllEntries)
+        {
+            if (!IsOneLevelDeepGameIndex(entry.Slug))
+                continue;
+
+            var routeSlug = ToRouteSlug(entry.Slug);
+
+            if (!Pages.TryGetRendered(routeSlug, out var page))
+                continue;
+
+            var title =
+                GetFm(page.FrontMatter, "nav_title") ??
+                GetFm(page.FrontMatter, "title") ??
+                page.Title;
+
+            var href = "/guide/" + routeSlug.Trim('/');
+
+            var square = GetFm(page.FrontMatter, "square_image");
+            var squarePath = !string.IsNullOrWhiteSpace(square)
+                ? ToContentPath(routeSlug, square!)
+                : null;
+
+            list.Add(new GuideCard(routeSlug, entry.Slug, title, href, squarePath));
+        }
+
+        return list
+            .OrderBy(x => x.Title, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static bool IsOneLevelDeepGameIndex(string slug)
+    {
+        slug = (slug ?? "").Trim('/');
+
+        if (!slug.StartsWith("guide/", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!slug.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var rel = slug["guide/".Length..];      // e.g. "halo/index" or "halo/haloreach/index"
+        var segs = rel.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        return segs.Length == 2;                // "<game>/index"
+    }
+
+    private static string ToRouteSlug(string fullSlug)
+    {
+        fullSlug = (fullSlug ?? "").Trim('/').Replace('\\', '/');
+
+        if (fullSlug.StartsWith("guide/", StringComparison.OrdinalIgnoreCase))
+            fullSlug = fullSlug["guide/".Length..];
+
+        if (fullSlug.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
+            fullSlug = fullSlug[..^"/index".Length];
+
+        return fullSlug.Trim('/');
+    }
+
+    private static string? GetFm(IReadOnlyDictionary<string, string> fm, string key)
+        => fm.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;
+
+    private static string ToContentPath(string routeSlug, string file)
+    {
+        routeSlug = (routeSlug ?? "").Trim('/').Replace('\\', '/');
+        file = (file ?? "").Trim().TrimStart('/').Replace('\\', '/');
+
+        return "/content/guide/" + (string.IsNullOrWhiteSpace(routeSlug) ? "" : routeSlug + "/") + file;
+    }
+
+    private sealed record GuideCard(string Slug, string FullSlug, string Title, string Href, string? SquareImagePath);
+}
