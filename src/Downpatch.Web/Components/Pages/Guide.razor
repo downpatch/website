@@ -302,7 +302,7 @@ else
     private static string GetEditUrl(string? slug)
     {
         // Default to guide/index.md if no slug
-        var baseUrl = "https://github.com/downpatch/content/blob/main/guide";
+        var baseUrl = "https://github.com/downpatch/content/blob/main";
         if (string.IsNullOrWhiteSpace(slug))
             return $"{baseUrl}/index.md";
     
