@@ -48,6 +48,7 @@ namespace Downpatch.Web.Services
 
             var title = fm.TryGetValue("title", out var t) && !string.IsNullOrWhiteSpace(t) ? t : entry.Slug;
             var htmlBody = Markdown.ToHtml(body, _pipeline);
+            htmlBody = RewriteRelativeLinks(htmlBody, entry.Slug);
 
             page = new RenderedPage(
                 Slug: entry.Slug,
@@ -102,6 +103,44 @@ namespace Downpatch.Web.Services
 
             return (fm, body);
         }
+
+        private static string RewriteRelativeLinks(string html, string slug)
+        {
+            // slug example: guide/halo/index
+            // base path should be /guide/halo/
+            var lastSlash = slug.LastIndexOf('/');
+            if (lastSlash < 0)
+                return html;
+
+            var basePath = "/" + slug[..lastSlash] + "/";
+
+            return System.Text.RegularExpressions.Regex.Replace(
+                html,
+                "<a\\s+([^>]*?)href=\"(.*?)\"",
+                match =>
+                {
+                    var before = match.Groups[1].Value;
+                    var href = match.Groups[2].Value;
+
+                    // skip absolute + root links
+                    if (href.StartsWith("/") ||
+                        href.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
+                        href.StartsWith("#") ||
+                        href.StartsWith("mailto:"))
+                        return match.Value;
+
+                    // remove .md if present
+                    if (href.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                        href = href[..^3];
+
+                    var newHref = basePath + href.TrimStart('/');
+
+                    return $"<a {before}href=\"{newHref}\"";
+                },
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+        }
+
 
         public readonly record struct RenderedPage(
             string Slug,
