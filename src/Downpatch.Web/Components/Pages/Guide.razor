@@ -96,7 +96,10 @@ else
             </div>
 
             <footer class="docs-footer">
-                <p class="muted">Found an issue? Edit the markdown and submit a PR.</p>
+                <p class="muted">
+                    Found an issue? 
+                    <a href="@GetEditUrl(Slug)" target="_blank" rel="noopener">Edit the markdown</a> and submit a PR.
+                </p>
             </footer>
         </main>
 
@@ -290,5 +293,17 @@ else
         }
 
         return new string(buf[..w]);
+    }
+
+    private static string GetEditUrl(string? slug)
+    {
+        // Default to guide/index.md if no slug
+        var baseUrl = "https://github.com/downpatch/content/blob/main/guide";
+        if (string.IsNullOrWhiteSpace(slug))
+            return $"{baseUrl}/index.md";
+    
+        // Sanitize and build path
+        var path = slug.Trim('/').Replace('\\', '/');
+        return $"{baseUrl}/{path}.md";
     }
 }
