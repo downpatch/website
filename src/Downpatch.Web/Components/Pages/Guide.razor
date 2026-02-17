@@ -310,6 +310,6 @@ else
         var path = slug.Trim('/').Replace('\\', '/');
         if (!path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             path += ".md";
-        return $"{baseUrl}/{path}.md";
+        return $"{baseUrl}/{path}";
     }
 }
