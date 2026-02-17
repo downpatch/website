@@ -98,7 +98,7 @@ else
             <footer class="docs-footer">
                 <p class="muted">
                     Found an issue? 
-                    <a href="@GetEditUrl(Slug)" target="_blank" rel="noopener">Edit the markdown</a> and submit a PR.
+                    <a href="@GetEditUrl(_resolvedEntrySlug)" target="_blank" rel="noopener">Edit the markdown</a> and submit a PR.
                 </p>
             </footer>
         </main>
@@ -142,6 +142,9 @@ else
 
     private List<Heading> _headings = new();
 
+    private string? _resolvedEntrySlug;
+
+
     protected override void OnParametersSet()
     {
         _currentPath = string.IsNullOrWhiteSpace(Slug)
@@ -170,6 +173,7 @@ else
         _title = page.Title;
         _pageTitle = page.Title;
         _html = page.HtmlBody;
+        _resolvedEntrySlug = page.Slug;
 
         _canonical = BuildCanonical(Slug);
 
@@ -304,6 +308,8 @@ else
     
         // Sanitize and build path
         var path = slug.Trim('/').Replace('\\', '/');
+        if (!path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            path += ".md";
         return $"{baseUrl}/{path}.md";
     }
 }
