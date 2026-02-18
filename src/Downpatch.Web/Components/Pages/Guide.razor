@@ -53,14 +53,7 @@ else
         </aside>
 
         <main id="doc-content" class="docs-main" tabindex="-1" aria-label="Document content">
-            <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                <a href="/guide">Guide</a>
-                @if (!string.IsNullOrWhiteSpace(Slug))
-                {
-                    <span class="docs-breadcrumb-sep">/</span>
-                    <span>@_title</span>
-                }
-            </nav>
+            <GuideBreadcrumb ResolvedEntrySlug="@_resolvedEntrySlug" CurrentTitle="@_title" />
 
             <header class="docs-header">
                 <h1 class="docs-h1">@_title</h1>

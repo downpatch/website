@@ -1,0 +1,94 @@
+@using System.Globalization
+@using Downpatch.Web.Services
+@inject MarkdownPageService Pages
+
+<nav class="docs-breadcrumb" aria-label="Breadcrumb">
+    <a href="/guide">Guide</a>
+
+    @foreach (var crumb in _crumbs)
+    {
+        <span class="docs-breadcrumb-sep">/</span>
+        @if (crumb.IsCurrent || string.IsNullOrWhiteSpace(crumb.Href))
+        {
+            <span aria-current="page">@crumb.Label</span>
+        }
+        else
+        {
+            <a href="@crumb.Href">@crumb.Label</a>
+        }
+    }
+</nav>
+
+@code {
+    [Parameter] public string? ResolvedEntrySlug { get; set; }
+    [Parameter] public string? CurrentTitle { get; set; }
+
+    private List<BreadcrumbItem> _crumbs = new();
+
+    protected override void OnParametersSet()
+    {
+        _crumbs = BuildCrumbs(ResolvedEntrySlug, CurrentTitle);
+    }
+
+    private List<BreadcrumbItem> BuildCrumbs(string? resolvedEntrySlug, string? currentTitle)
+    {
+        var crumbs = new List<BreadcrumbItem>();
+
+        var path = (resolvedEntrySlug ?? "").Replace('\\', '/').Trim('/');
+        if (path.StartsWith("guide/", StringComparison.OrdinalIgnoreCase))
+            path = path["guide/".Length..];
+
+        if (path.EndsWith("/index", StringComparison.OrdinalIgnoreCase))
+            path = path[..^"/index".Length];
+
+        if (string.IsNullOrWhiteSpace(path))
+            return crumbs;
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        for (var i = 0; i < segments.Length; i++)
+        {
+            var segPath = string.Join('/', segments.Take(i + 1));
+            var isCurrent = i == segments.Length - 1;
+
+            var label = isCurrent && !string.IsNullOrWhiteSpace(currentTitle)
+                ? currentTitle!
+                : ResolveCrumbLabel(segPath, segments[i]);
+
+            crumbs.Add(new BreadcrumbItem(
+                Label: label,
+                Href: isCurrent ? null : "/guide/" + segPath,
+                IsCurrent: isCurrent));
+        }
+
+        return crumbs;
+    }
+
+    private string ResolveCrumbLabel(string routeSlug, string fallbackSegment)
+    {
+        if (Pages.TryGetRendered(routeSlug, out var page))
+        {
+            if (page.FrontMatter.TryGetValue("nav_title", out var navTitle) &&
+                !string.IsNullOrWhiteSpace(navTitle))
+            {
+                return navTitle;
+            }
+
+            if (!string.IsNullOrWhiteSpace(page.Title))
+                return page.Title;
+        }
+
+        return HumanizeSegment(fallbackSegment);
+    }
+
+    private static string HumanizeSegment(string value)
+    {
+        value = (value ?? "").Trim().Replace('-', ' ').Replace('_', ' ');
+        if (value.Length == 0)
+            return "Untitled";
+
+        var textInfo = CultureInfo.CurrentCulture.TextInfo;
+        return textInfo.ToTitleCase(value.ToLowerInvariant());
+    }
+
+    private sealed record BreadcrumbItem(string Label, string? Href, bool IsCurrent);
+}
