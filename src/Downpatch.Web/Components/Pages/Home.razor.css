@@ -1,103 +1,85 @@
 .home-hero {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(255,255,255,.015),
-            rgba(255,255,255,0)
-        );
-
-    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-bottom: 1px solid var(--border);
 }
 
 .home-hero-inner {
     max-width: var(--page-max);
     margin: 0 auto;
-    padding: 2.25rem var(--pad) 1.5rem;
+    padding: 2.5rem 0 2rem;
 }
 
 .home-kicker {
     margin: 0 0 .5rem;
     color: var(--muted);
-    font-weight: 650;
-    letter-spacing: .02em;
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    font-size: .9rem;
 }
 
 .home-title {
+    max-width: 28ch;
     margin: 0;
-    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
-    line-height: 1.12;
 }
 
 .home-lead {
-    margin: .85rem 0 0;
     max-width: 70ch;
-    font-size: 1.06rem;
+    margin: .85rem 0 0;
     color: var(--text);
+    font-size: 1.1rem;
 }
 
 .home-actions {
-    margin-top: 1.1rem;
     display: flex;
     flex-wrap: wrap;
-    gap: .5rem;
+    gap: .75rem;
+    margin-top: 1.25rem;
 }
 
 .home-action {
     display: inline-flex;
     align-items: center;
-    gap: .45rem;
-
-    padding: .65rem 1rem;
-
-    border-radius: 999px;
-
-    text-decoration: none;
-
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: .6rem .9rem;
+    background: var(--surface);
     color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+}
 
-    border: 1px solid var(--border);
-
-    background: rgba(255,255,255,.03);
-
-    transition:
-        background .18s ease,
-        border-color .18s ease,
-        transform .18s ease;
+.home-action:visited {
+    color: var(--text);
 }
 
 .home-action:hover {
-    transform: translateY(-1px);
-
-    background: rgba(255,255,255,.05);
-
-    border-color: var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: #fff;
+    text-decoration: underline;
 }
 
 .home-action.primary {
-    background: var(--accent);
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
 
-    color: #08111d;
-
-    border: 0;
-
-    font-weight: 700;
+.home-action.primary:visited {
+    color: #000;
 }
 
 .home-action.primary:hover {
-    background: var(--accent-hover);
-}
-
-.home-action:focus-visible {
-    outline: 3px solid var(--focus);
-    outline-offset: 2px;
+    background: #e5e7eb;
+    color: #000;
 }
 
 .home-body {
     max-width: var(--page-max);
     margin: 0 auto;
-    padding: 1.25rem var(--pad) 2.25rem;
+    padding: 1.5rem 0 2.5rem;
 }
 
 .home-cards {
@@ -107,78 +89,35 @@
 }
 
 .home-card {
-    background: #1b2331;
-
-    border: 1px solid rgba(255,255,255,.06);
-
-    border-radius: 12px;
-
     padding: 1.25rem;
-
-    transition:
-        border-color .15s ease,
-        transform .15s ease;
-}
-
-.home-card:hover {
-    border-color: rgba(130,180,255,.18);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
 }
 
 .home-h2 {
-    margin: 0 0 .85rem;
-
-    font-size: 1.1rem;
-
-    font-weight: 700;
-
-    letter-spacing: -.02em;
+    margin: 0 0 .75rem;
+    font-size: 1.2rem;
 }
 
 .home-list {
     margin: 0;
-    padding-left: 1.15rem;
+    padding-left: 1.25rem;
 }
 
 .home-list li {
-    margin: .7rem 0;
-
-    color: var(--muted);
-
-    line-height: 1.6;
+    margin: .6rem 0;
+    color: var(--text);
 }
 
-.home-card,
-.docs-left,
-.docs-right,
-.docs-header {
-    position: relative;
-}
-
-.home-card::before,
-.docs-left::before,
-.docs-right::before,
-.docs-header::before {
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    right: 0;
-    top: 0;
-
-    height: 1px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(255,255,255,.08),
-            transparent
-        );
-}
-
-@media (max-width: 980px) {
+@media (max-width: 900px) {
     .home-cards {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .home-actions {
+        display: grid;
     }
 }

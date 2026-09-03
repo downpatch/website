@@ -1,165 +1,123 @@
 @using Downpatch.Web.Components.Guide.Models
-@using Microsoft.AspNetCore.Components.Web
 
-<div class="level-card">
-
+<div class="level-card" aria-labelledby="level-info-title">
     <header class="level-header">
-
-        <div class="level-header-left">
-
+        <div>
             @if (!string.IsNullOrWhiteSpace(Info.Game))
             {
-                <div class="level-game">@Info.Game</div>
+                <p class="level-game">@Info.Game</p>
             }
 
-            <h2 class="level-title">@Info.Title</h2>
-
+            <h2 id="level-info-title" class="level-title">@Info.Title details</h2>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Info.MissionNumber))
         {
-            <div class="level-mission-number">
-                @Info.MissionNumber
-            </div>
+            <p class="level-mission-number">@Info.MissionNumber</p>
         }
-
     </header>
 
     @if (!string.IsNullOrWhiteSpace(Info.HeroImage))
     {
         <img class="level-image"
              src="@Info.HeroImage"
-             alt="@Info.Title" />
+             alt="" />
     }
 
     @if (!string.IsNullOrWhiteSpace(Info.MapName))
     {
-        <section class="level-section">
-
-            <div class="section-title">
-                Map
-            </div>
-
-            <div class="level-map-id">
-                @Info.MapName?.ToUpperInvariant()
-            </div>
-
+        <section class="level-section" aria-labelledby="level-map-title">
+            <h3 id="level-map-title" class="section-title">Map</h3>
+            <code class="level-map-id">@Info.MapName</code>
         </section>
     }
 
     @if (Info.Goals.Any())
     {
-        <section class="level-section">
-            
-            <div class="section-title">
-                Goals
-            </div>
+        <section class="level-section" aria-labelledby="level-goals-title">
+            <h3 id="level-goals-title" class="section-title">Goals</h3>
 
-            <div class="difficulty-toggle">
-
-                <button
-                    type="button"
-                    class="@(difficulty == "Easy" ? "active" : "")"
-                    @onclick="ShowEasy">
+            <div class="difficulty-toggle" role="group" aria-label="Select goal difficulty">
+                <button type="button"
+                        aria-pressed="@(difficulty == "Easy" ? "true" : "false")"
+                        @onclick="ShowEasy">
                     Easy
                 </button>
 
-                <button
-                    type="button"
-                    class="@(difficulty == "Legendary" ? "active" : "")"
-                    @onclick="ShowLegendary">
+                <button type="button"
+                        aria-pressed="@(difficulty == "Legendary" ? "true" : "false")"
+                        @onclick="ShowLegendary">
                     Legendary
                 </button>
 
-                <button
-                    type="button"
-                    class="@(difficulty == "LASO" ? "active" : "")"
-                    @onclick="ShowLASO">
+                <button type="button"
+                        aria-pressed="@(difficulty == "LASO" ? "true" : "false")"
+                        @onclick="ShowLASO">
                     LASO
                 </button>
-
             </div>
 
-            @foreach (var goal in Info.Goals)
-            {
-                <div class="goal-row">
+            <dl class="goal-list" aria-live="polite">
+                @foreach (var goal in Info.Goals)
+                {
+                    var selectedTime = GetGoalTime(goal);
 
-                    <div class="goal-name">
-                        <span class="goal-dot"
-                              style="@($"background:{goal.Accent}")"></span>
-
-                        <span>@goal.Label</span>
-                    </div>
-
-                    <div class="goal-time">
-
-                        <strong>
-
-                            @(difficulty switch
+                    <div class="goal-row">
+                        <dt>@goal.Label</dt>
+                        <dd>
+                            @if (string.IsNullOrWhiteSpace(selectedTime))
                             {
-                                "Easy" => goal.Easy,
-                                "Legendary" => goal.Legendary,
-                                "LASO" => goal.Laso,
-                                _ => goal.Easy
-                            })
-
-                        </strong>
-
+                                <span aria-hidden="true">—</span>
+                                <span class="visually-hidden">Not available</span>
+                            }
+                            else
+                            {
+                                @selectedTime
+                            }
+                        </dd>
                     </div>
-
-                </div>
-            }
-
+                }
+            </dl>
         </section>
     }
 
-    <section class="level-section">
+    <section class="level-section" aria-labelledby="level-navigation-title">
+        <h3 id="level-navigation-title" class="section-title">Level navigation</h3>
 
-        <div class="section-title">
-            Navigation
-        </div>
-
-        <div class="level-navigation">
-
+        <nav class="level-navigation" aria-labelledby="level-navigation-title">
             @if (!string.IsNullOrWhiteSpace(Info.PreviousName))
             {
-                <a class="nav-link" href="@Info.PreviousUrl">
-                    ← @Info.PreviousName
+                <a class="level-nav-link" href="@Info.PreviousUrl">
+                    <span aria-hidden="true">←</span> Previous: @Info.PreviousName
                 </a>
             }
 
-            <div class="nav-current">
-                @Info.Title
-            </div>
+            <span class="nav-current" aria-current="page">Current: @Info.Title</span>
 
             @if (!string.IsNullOrWhiteSpace(Info.NextName))
             {
-                <a class="nav-link" href="@Info.NextUrl">
-                    @Info.NextName →
+                <a class="level-nav-link" href="@Info.NextUrl">
+                    Next: @Info.NextName <span aria-hidden="true">→</span>
                 </a>
             }
-
-        </div>
-
+        </nav>
     </section>
-
 </div>
 
-@code
-{
+@code {
     [Parameter]
     public required LevelInfo Info { get; set; }
 
-    private void ShowEasy() => difficulty = "Easy";
-
-    private void ShowLegendary() => difficulty = "Legendary";
-
-    private void ShowLASO() => difficulty = "LASO";
-
     private string difficulty = "Easy";
 
-    private void SetDifficulty(string value)
+    private void ShowEasy() => difficulty = "Easy";
+    private void ShowLegendary() => difficulty = "Legendary";
+    private void ShowLASO() => difficulty = "LASO";
+
+    private string? GetGoalTime(GoalInfo goal) => difficulty switch
     {
-        difficulty = value;
-    }
+        "Legendary" => goal.Legendary,
+        "LASO" => goal.Laso,
+        _ => goal.Easy
+    };
 }

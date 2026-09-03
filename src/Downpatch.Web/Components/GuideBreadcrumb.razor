@@ -3,20 +3,24 @@
 @inject MarkdownPageService Pages
 
 <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-    <a href="/guide">Guide</a>
+    <ol>
+        <li><a href="/guide">Guides</a></li>
 
-    @foreach (var crumb in _crumbs)
-    {
-        <span class="docs-breadcrumb-sep">/</span>
-        @if (crumb.IsCurrent || string.IsNullOrWhiteSpace(crumb.Href))
+        @foreach (var crumb in _crumbs)
         {
-            <span aria-current="page">@crumb.Label</span>
+            <li>
+                <span class="docs-breadcrumb-sep" aria-hidden="true">/</span>
+                @if (crumb.IsCurrent || string.IsNullOrWhiteSpace(crumb.Href))
+                {
+                    <span aria-current="page">@crumb.Label</span>
+                }
+                else
+                {
+                    <a href="@crumb.Href">@crumb.Label</a>
+                }
+            </li>
         }
-        else
-        {
-            <a href="@crumb.Href">@crumb.Label</a>
-        }
-    }
+    </ol>
 </nav>
 
 @code {
@@ -73,7 +77,8 @@
                 return navTitle;
             }
 
-            if (!string.IsNullOrWhiteSpace(page.Title))
+            if (!string.IsNullOrWhiteSpace(page.Title) &&
+                !string.Equals(page.Title, page.Slug, StringComparison.OrdinalIgnoreCase))
                 return page.Title;
         }
 

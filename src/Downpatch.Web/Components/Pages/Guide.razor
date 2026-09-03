@@ -36,112 +36,120 @@
 
 @if (_notFound)
 {
-    <div class="docs-shell" style="max-width: 1600px;">
-        <main class="docs-main">
-            <h1>Not found</h1>
-            <p>That page doesn’t exist.</p>
-        </main>
-    </div>
+    <section class="docs-not-found" aria-labelledby="not-found-title">
+        <h1 id="not-found-title">Not found</h1>
+        <p>That page doesn’t exist.</p>
+    </section>
 }
 else
 {
-    <a class="skip-link" href="#doc-content">Skip to content</a>
+    <a class="skip-link guide-skip-link" href="@($"{_currentPath}#doc-content")">Skip to guide content</a>
 
-    <div class="docs-shell" style="max-width: 1600px;">
-        <aside class="docs-left" aria-label="Navigation">
+    <div class="docs-shell">
+        <aside class="docs-left" aria-labelledby="guide-contents-title">
             <div class="docs-left-inner">
-                <div class="docs-left-title">Contents</div>
+                <h2 id="guide-contents-title" class="docs-sidebar-title">Guide contents</h2>
                 <SidebarNav Nodes="@_toc" CurrentPath="@_currentPath" />
             </div>
         </aside>
 
-        <main id="doc-content" class="docs-main" tabindex="-1" aria-label="Document content">
+        <details class="docs-mobile-nav">
+            <summary>Guide contents</summary>
+            <div class="docs-mobile-nav-body">
+                <SidebarNav Nodes="@_toc" CurrentPath="@_currentPath" />
+            </div>
+        </details>
+
+        <article id="doc-content" class="docs-main" tabindex="-1" aria-labelledby="doc-title">
             <GuideBreadcrumb ResolvedEntrySlug="@_resolvedEntrySlug" CurrentTitle="@_title" />
 
             <header class="docs-header">
-                <h1 class="docs-h1">@_title</h1>
+                <h1 id="doc-title" class="docs-h1">@_title</h1>
 
                 @if (!string.IsNullOrWhiteSpace(_description))
                 {
                     <p class="docs-lead">@_description</p>
                 }
 
-                <div class="docs-actions" role="navigation" aria-label="Document actions">
+                <nav class="docs-actions" aria-label="Document links">
                     @if (!string.IsNullOrWhiteSpace(_leaderboard))
                     {
                         <a class="docs-action" href="@_leaderboard" rel="noopener" target="_blank">
-                            <i class="bi bi-trophy"></i>
-                            Leaderboard
+                            Leaderboard<span class="visually-hidden"> (opens in a new tab)</span>
                         </a>
                     }
 
                     @if (!string.IsNullOrWhiteSpace(_discord))
                     {
                         <a class="docs-action" href="@_discord" rel="noopener" target="_blank">
-                            <i class="bi bi-discord"></i>
-                            Discord
+                            Discord<span class="visually-hidden"> (opens in a new tab)</span>
                         </a>
                     }
-                </div>
+                </nav>
             </header>
 
+            @if (_headings.Count > 0)
+            {
+                <details class="docs-mobile-toc">
+                    <summary>On this page</summary>
+                    <ul class="docs-otp">
+                        @foreach (var h in _headings)
+                        {
+                            <li class="docs-otp-item @(h.Level == 3 ? "is-h3" : "")">
+                                <a class="docs-otp-link"
+                                   href="@($"{_currentPath}#{h.Id}")"
+                                   data-no-routing="true">@h.Text</a>
+                            </li>
+                        }
+                    </ul>
+                </details>
+            }
+
             <div class="docs-content">
-                <article class="prose">
+                <div class="prose">
                     @((MarkupString)_html)
-                </article>
+                </div>
             </div>
 
             <footer class="docs-footer">
                 <p class="muted">
-                    Found an issue? 
-                    <a href="@GetEditUrl(_resolvedEntrySlug)" target="_blank" rel="noopener">Edit the markdown</a> and submit a PR.
+                    Found an issue?
+                    <a href="@GetEditUrl(_resolvedEntrySlug)" target="_blank" rel="noopener">Edit the markdown<span class="visually-hidden"> (opens in a new tab)</span></a>
+                    and submit a PR.
                 </p>
             </footer>
-        </main>
+        </article>
 
-        <aside class="docs-right" aria-label="Guide sidebar">
+        @if (_levelInfo is not null || _headings.Count > 0)
+        {
+            <aside class="docs-right @(_levelInfo is null ? "docs-right--toc-only" : "")" aria-label="Guide information">
+                <div class="docs-right-inner">
+                    @if (_levelInfo is not null)
+                    {
+                        <LevelInfoCard Info="_levelInfo" />
+                    }
 
-            <div class="docs-right-inner">
-
-                @if (_levelInfo is not null)
-                {
-                    <LevelInfoCard Info="_levelInfo" />
-                }
-
-                <div class="docs-right-title">
-
-                    On this page
-
+                    @if (_headings.Count > 0)
+                    {
+                        <section class="docs-on-this-page" aria-labelledby="on-this-page-title">
+                            <h2 id="on-this-page-title" class="docs-sidebar-title">On this page</h2>
+                            <nav aria-labelledby="on-this-page-title">
+                                <ul class="docs-otp">
+                                    @foreach (var h in _headings)
+                                    {
+                                        <li class="docs-otp-item @(h.Level == 3 ? "is-h3" : "")">
+                                            <a class="docs-otp-link"
+                                               href="@($"{_currentPath}#{h.Id}")"
+                                               data-no-routing="true">@h.Text</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+                        </section>
+                    }
                 </div>
-
-                <nav>
-
-                    <ul class="docs-otp">
-
-                        @foreach (var h in _headings)
-                        {
-                            <li class="docs-otp-item @(h.Level == 3 ? "is-h3" : "")">
-
-                                <a
-                                    id="toc-@h.Id"
-                                    class="docs-otp-link"
-                                    href="@($"{_currentPath}#{h.Id}")"
-                                    data-no-routing="true">
-
-                                    @h.Text
-
-                                </a>
-
-                            </li>
-                        }
-
-                    </ul>
-
-                </nav>
-
-            </div>
-
-        </aside>
+            </aside>
+        }
     </div>
 }
 
@@ -243,6 +251,7 @@ else
         {
             var next = FindNextHeading(html, i, out var level, out var open, out var close);
             if (next < 0) break;
+            if (close < 0) break;
 
             var tagEnd = html.IndexOf('>', open);
             if (tagEnd < 0) break;
@@ -253,12 +262,12 @@ else
             var id = ExtractAttr(tag, "id");
             if (!string.IsNullOrWhiteSpace(id))
             {
-                var text = StripTags(inner).Trim();
+                var text = System.Net.WebUtility.HtmlDecode(StripTags(inner)).Trim();
                 if (text.Length > 0)
                     result.Add(new Heading(level, id, text));
             }
 
-            i = close + (level == 2 ? 5 : 5);
+            i = close + 5;
         }
 
         return result;
@@ -365,7 +374,6 @@ else
                 new GoalInfo
                 {
                     Label = "Beginner",
-                    Accent = "#44d27b",
                     Easy = Get(fm,"goal_beginner_easy"),
                     Legendary = Get(fm,"goal_beginner_legendary"),
                     Laso = Get(fm,"goal_beginner_laso")
@@ -374,7 +382,6 @@ else
                 new GoalInfo
                 {
                     Label = "Intermediate",
-                    Accent = "#1fb56a",
                     Easy = Get(fm,"goal_intermediate_easy"),
                     Legendary = Get(fm,"goal_intermediate_legendary"),
                     Laso = Get(fm, "goal_intermediate_laso")
@@ -383,7 +390,6 @@ else
                 new GoalInfo
                 {
                     Label = "Top 10",
-                    Accent = "#4cbcff",
                     Easy = Get(fm,"goal_world_easy"),
                     Legendary = Get(fm,"goal_world_legendary"),
                     Laso = Get(fm, "goal_world_laso")
@@ -392,7 +398,6 @@ else
                 new GoalInfo
                 {
                     Label = "IL Record",
-                    Accent = "#9d73ff",
                     Easy = Get(fm,"goal_il_easy"),
                     Legendary = Get(fm,"goal_il_legendary"),
                     Laso = Get(fm, "goal_il_laso")

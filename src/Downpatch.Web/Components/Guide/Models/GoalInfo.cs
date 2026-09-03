@@ -9,6 +9,4 @@ public class GoalInfo
     public string Legendary { get; set; } = "";
 
     public string? Laso { get; set; }
-
-    public string Accent { get; set; } = "#F6B64C";
 }

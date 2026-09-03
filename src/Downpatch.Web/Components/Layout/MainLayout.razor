@@ -1,17 +1,16 @@
 @inherits LayoutComponentBase
 
-@inject NavigationManager nav
+@inject NavigationManager Navigation
 
-<a class="skip-link" href="@skipLink">Skip to main content</a>
+<a class="skip-link" href="@MainSkipHref">Skip to main content</a>
 
 <header class="site-header">
     <div class="site-header-inner">
-        <h1 class="site-brand">
-            <a href="/" class="site-brand-link">
-                <span class="site-brand-mark">⬢</span>
+        <div class="site-brand">
+            <a href="/" class="site-brand-link" aria-label="Downpatch home">
                 <span class="site-brand-text">DOWNPATCH</span>
             </a>
-        </h1>
+        </div>
         <nav class="site-header-nav" aria-label="Primary">
             <a href="/guide" class="site-header-link">Guides</a>
             <a href="https://github.com/downpatch/content" class="site-header-link">Contribute</a>
@@ -23,25 +22,20 @@
     @Body
 </main>
 
-<nav class="sticky-links" aria-label="External links">
-    <a class="sticky-btn" href="https://discord.gg/uvGWPTXx84" target="_blank" rel="noopener noreferrer">
-        <i class="bi bi-discord" aria-hidden="true"></i>
-        <span class="sticky-label">Discord</span>
-        <span class="visually-hidden"> (opens in a new tab)</span>
-    </a>
+<footer class="site-footer">
+    <nav class="site-footer-nav" aria-label="External links">
+        <a class="site-footer-link" href="https://discord.gg/uvGWPTXx84" target="_blank" rel="noopener noreferrer">
+            Discord
+            <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
 
-    <a class="sticky-btn" href="https://github.com/downpatch" target="_blank" rel="noopener noreferrer">
-        <i class="bi bi-github" aria-hidden="true"></i>
-        <span class="sticky-label">GitHub</span>
-        <span class="visually-hidden"> (opens in a new tab)</span>
-    </a>
-</nav>
+        <a class="site-footer-link" href="https://github.com/downpatch" target="_blank" rel="noopener noreferrer">
+            GitHub
+            <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+    </nav>
+</footer>
 
 @code {
-
-    private string skipLink => nav.Uri + "#main";
-
-
-
-
+    private string MainSkipHref => Navigation.Uri.Split('#')[0] + "#main";
 }

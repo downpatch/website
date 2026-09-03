@@ -78,8 +78,6 @@ namespace Downpatch.Web
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
             });
 
-            var isDev = app.Environment.IsDevelopment();
-
             if (app.Environment.IsDevelopment())
             {
                 app.Use(async (ctx, next) =>
@@ -89,8 +87,8 @@ namespace Downpatch.Web
                         "frame-src https://www.youtube.com https://www.youtube-nocookie.com; " +
                         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; " +
                         "script-src 'self' 'unsafe-inline'; " +
-                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
-                        "img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net data:; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "img-src 'self' data:; font-src 'self' data:; " +
                         "connect-src 'self' ws: wss: http://localhost:* https://localhost:*";
                     await next();
                 });
@@ -101,10 +99,11 @@ namespace Downpatch.Web
                 {
                     ctx.Response.Headers["Content-Security-Policy"] =
                         "default-src 'self'; " +
+                        "frame-src https://www.youtube.com https://www.youtube-nocookie.com; " +
                         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; " +
                         "script-src 'self'; " +
-                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
-                        "img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net data:; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "img-src 'self' data:; font-src 'self' data:; " +
                         "connect-src 'self'";
                     await next();
                 });
