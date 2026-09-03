@@ -14,7 +14,9 @@ namespace Downpatch.Web
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddRazorComponents();
+            builder.Services
+                .AddRazorComponents()
+                .AddInteractiveServerComponents();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddRouting();
             builder.Services.AddMemoryCache(o =>
@@ -33,8 +35,26 @@ namespace Downpatch.Web
             builder.Services.AddSingleton(sp =>
             {
                 var pipeline = new MarkdownPipelineBuilder()
-                    .DisableHtml()
+
+                    // GitHub-style heading IDs
                     .UseAutoIdentifiers(Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions.GitHub)
+
+                    // Enable nearly all standard Markdown + GFM features
+                    .UseAdvancedExtensions()
+
+                    // Better table support
+                    .UsePipeTables()
+                    .UseGridTables()
+
+                    // GitHub task lists
+                    .UseTaskLists()
+
+                    // ~~strikethrough~~, subscript, superscript
+                    .UseEmphasisExtras()
+
+                    // {#custom-id .class}
+                    .UseGenericAttributes()
+
                     .Build();
 
                 return pipeline;
@@ -66,6 +86,7 @@ namespace Downpatch.Web
                 {
                     ctx.Response.Headers["Content-Security-Policy"] =
                         "default-src 'self'; " +
+                        "frame-src https://www.youtube.com https://www.youtube-nocookie.com; " +
                         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; " +
                         "script-src 'self' 'unsafe-inline'; " +
                         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
@@ -112,7 +133,8 @@ namespace Downpatch.Web
             app.UseStaticFiles();
             app.MapRobots();
             app.MapSitemap();
-            app.MapRazorComponents<App>();
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode();
             using var scope = app.Services.CreateScope();
 
             var pages = scope.ServiceProvider.GetRequiredService<Downpatch.Web.Services.MarkdownPageService>();
